@@ -9,7 +9,7 @@ export function Header() {
       <img
         src={logo}
         alt={config?.name ?? "Kool Fruits"}
-        className="h-20 w-20 rounded-full object-cover shadow-sm"
+        className="h-32 w-32 rounded-full object-cover shadow-sm"
       />
       <h1 className="font-display text-2xl font-bold text-forest">{config?.name ?? "Kool Fruits"}</h1>
       <p className="text-sm font-medium tracking-wide text-leaf-dark uppercase">

@@ -13,6 +13,12 @@ export function Home() {
       <Header />
 
       <main className="mx-auto flex max-w-md flex-col gap-3 px-4">
+        {!loading && !error && products.length > 0 && (
+          <p className="-mt-1 mb-1 text-center text-sm text-gray-500">
+            Pick your coconut water below 🥥
+          </p>
+        )}
+
         {loading && (
           <div className="flex flex-col gap-3">
             {[1, 2, 3].map((i) => (
