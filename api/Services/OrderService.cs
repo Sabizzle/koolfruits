@@ -116,7 +116,24 @@ public class OrderService(AppDbContext db, IBackgroundTaskQueue taskQueue, ILogg
 
     private async Task<string> NextOrderNumberAsync()
     {
-        var count = await db.Orders.CountAsync();
-        return $"KF-{count + 1:D5}";
+        // Based on the last-created order's own number, not a row count — a row count
+        // silently desyncs from reality the moment any order is ever deleted (even a
+        // one-off manual cleanup), permanently colliding with an existing number and
+        // making every subsequent order fail. Using Id (always unique, never reused)
+        // keyed to the most recent row is immune to that.
+        var lastOrderNumber = await db.Orders
+            .OrderByDescending(o => o.Id)
+            .Select(o => o.OrderNumber)
+            .FirstOrDefaultAsync();
+
+        var nextSequence = 1;
+        if (lastOrderNumber is not null
+            && lastOrderNumber.StartsWith("KF-", StringComparison.Ordinal)
+            && int.TryParse(lastOrderNumber.AsSpan(3), out var lastSequence))
+        {
+            nextSequence = lastSequence + 1;
+        }
+
+        return $"KF-{nextSequence:D5}";
     }
 }
