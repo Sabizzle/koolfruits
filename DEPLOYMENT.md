@@ -15,42 +15,58 @@ Two reasonable paths, depending on how hands-on you want to be.
 
 ## Option A — Managed platform (Render, Railway, or similar)
 
-Least setup, no server maintenance, costs a bit more per month. These steps describe
-Render specifically, but Railway/Fly.io follow the same shape.
+Least setup, no server maintenance, costs a bit more per month (or $0 on a free tier,
+with a sleep/wake tradeoff — see the note at the end). **This is what's actually
+deployed** at the URLs in the README, using Render specifically; Railway/Fly.io follow a
+similar shape.
 
 1. Push this repo to GitHub.
-2. **Database**: create a small Postgres instance on Render. Copy its connection string.
+2. **Database**: Render's own free Postgres offering changes over time, so this used
+   [Neon](https://neon.tech) instead — sign up, create a project, and copy its connection
+   string. Neon (and most providers) give you a `postgresql://user:pass@host/db?sslmode=require`
+   URI; Npgsql wants key-value format, so convert it to:
+   `Host=<host>;Database=<db>;Username=<user>;Password=<password>;SSL Mode=Require;Trust Server Certificate=true;Channel Binding=Require`
 3. **API — Web Service**, pointed at the `/api` folder:
-   - Build command: `dotnet publish -c Release -o out`
-   - Start command: `dotnet out/KoolFruits.Api.dll`
+   - Render builds .NET apps via Docker, not a native buildpack — `api/Dockerfile` is
+     already set up for this (multi-stage build, reads the listening port from Render's
+     `$PORT` at container start). Just set **Runtime: Docker**, **Root Directory: `api`**.
    - Environment variables:
-     - `ASPNETCORE_ENVIRONMENT=Production`
      - `Database__Provider=Postgres`
      - `ConnectionStrings__Postgres=<the connection string from step 2>`
      - `Admin__Username` / `Admin__Password` — a real, strong password (not the dev default)
      - `Business__WhatsAppNumber`, `Business__Name`, `Business__Tagline`, `Business__Currency`
        if they differ from `appsettings.json`
-     - `Cors__AllowedOrigins__0=https://<your-web-app-url>`
+     - `Cors__AllowedOrigins__0=https://<your-web-app-url>` (you'll only know this after
+       step 4 — set a placeholder now, come back and fix it after)
      - `Email__ResendApiKey`, `Email__RecipientAddress` and `GoogleSheets__WebAppUrl`,
        `GoogleSheets__SharedSecret` — order notifications (see README "Order
        notifications"); omit any of these to leave that notification off
-   - **Persistent disk**: mount one at `/app/wwwroot/product-photos` so uploaded photos
-     survive redeploys. Pick an always-on plan, not a free/sleeping tier — a sleeping
-     instance means customers briefly can't place orders until it wakes up.
+   - Product-photo uploads land on the container's own disk, which is **not** persistent
+     on Render's free tier — they're lost on every redeploy/restart. A paid plan can add a
+     persistent disk mounted at `/app/wwwroot/product-photos` if this matters to you;
+     otherwise it's a known, accepted limitation of the free tier.
 4. **Web app — Static Site**, pointed at the `/web` folder:
    - Build command: `npm install && npm run build`
-   - Publish directory: `web/dist`
+   - Publish directory: `dist`
    - Environment variable at build time: `VITE_API_BASE_URL=https://<your-api-url>`
      (the static site and API get different URLs on Render, so the frontend needs the
      full API URL instead of relying on relative `/api/...` paths)
-   - Add a rewrite rule `/*` → `/index.html` so React Router routes still work on a
-     page refresh (e.g. `/admin/today`)
-5. In the API's `Cors:AllowedOrigins`, make sure it matches the static site's exact URL
-   from step 4. The admin login cookie is set `SameSite=None; Secure` outside
-   Development specifically so this cross-origin setup works — it requires HTTPS on
-   both sides, which Render provides automatically.
+   - SPA routing (so refreshing `/admin/today` doesn't 404) is already handled by
+     `web/public/_redirects`, which Vite copies into every build automatically — no
+     dashboard configuration needed, which is good because the "Redirects/Rewrites" tab
+     can be hard to find in Render's UI depending on the account/plan.
+5. Go back to the API service's environment variables and set `Cors:AllowedOrigins` to
+   the static site's actual URL from step 4 (saving triggers a redeploy). The admin login
+   cookie is set `SameSite=None; Secure` outside Development specifically so this
+   cross-origin setup works — it requires HTTPS on both sides, which Render provides
+   automatically.
 6. (Optional) Point a custom domain at the static site, and another at the API, through
    Render's domain settings.
+
+**Free tier sleep**: a free Render web service spins down after ~15 minutes with no
+traffic and takes 30-50 seconds to wake on the next request — noticeable to a customer
+placing an order at the wrong moment. Upgrading just the API service to a paid always-on
+plan removes this; the static site can stay free either way.
 
 ## Option B — A single cheap VPS (DigitalOcean, Hetzner, Linode, Vultr)
 

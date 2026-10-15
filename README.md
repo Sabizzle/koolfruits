@@ -4,9 +4,15 @@ Ordering web app for Kool Fruits, a coconut water delivery business in Jamaica.
 "Fresh • Tropical • Natural"
 
 This repo is being built in phases. **Current status: Phase 5 complete — all five
-phases are done**, plus order notifications (email + a live Google Sheet) added after.
-The app is installable as a PWA, and [DEPLOYMENT.md](DEPLOYMENT.md) covers putting it
-online on a low-cost host.
+phases are done**, plus order notifications (email + a live Google Sheet) added after,
+and it's deployed. The app is installable as a PWA, and [DEPLOYMENT.md](DEPLOYMENT.md)
+covers the hosting setup in detail.
+
+**Live**: [koolfruits-web.onrender.com](https://koolfruits-web.onrender.com) (customer
+site) · [koolfruits-web.onrender.com/admin](https://koolfruits-web.onrender.com/admin)
+(admin board) · API at [koolfruits-api.onrender.com](https://koolfruits-api.onrender.com).
+Hosted on Render's free tier — the API sleeps after ~15 minutes idle and takes 30-50s to
+wake on the next request; see DEPLOYMENT.md if that becomes worth paying to avoid.
 
 - `/api` — ASP.NET Core Web API (C#, .NET 10), Entity Framework Core, SQLite (dev) /
   PostgreSQL (hosting)
