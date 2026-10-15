@@ -97,7 +97,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+// No UseHttpsRedirection(): both documented hosting paths (Render, or a VPS behind Caddy)
+// terminate TLS at a proxy in front of this container/process, which then forwards plain
+// HTTP — the app itself never needs to redirect.
 app.UseStaticFiles();
 app.UseCors("Frontend");
 app.UseAuthentication();
