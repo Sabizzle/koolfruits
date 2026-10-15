@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-leaf: #3dbe29;
+  --color-leaf-dark: #2f9620;
+  --color-forest: #1e4620;
+  --color-pineapple: #f6b92b;
+  --color-cream: #fbf8f1;
+
+  --font-display: "Baloo 2", ui-rounded, "Segoe UI Rounded", sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-forest);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+}
+
+.input {
+  @apply w-full rounded-xl border border-black/10 bg-white px-4 py-2.5 text-base text-forest outline-none;
+  @apply focus:border-leaf focus:ring-2 focus:ring-leaf/30;
+}
